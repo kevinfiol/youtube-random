@@ -2,7 +2,7 @@ import { Hono } from '@hono/hono';
 import { secureHeaders } from '@hono/hono/secure-headers';
 import { basicAuth } from '@hono/hono/basic-auth';
 import { loadSync } from '@std/dotenv';
-import { getRandomVideo } from './youtube.js';
+import { getRandomVideo, getVideoDetails } from './youtube.js';
 
 loadSync({ export: true });
 
@@ -20,33 +20,35 @@ app.get('/', (c) => c.text('OK'));
 
 app.get('/random', basicAuth({ username: USER, password: PASSWORD }), async (c) => {
   const channelId = c.req.query('channelId') ?? '';
-  const payload = { data: '', error: null };
+  const payload = { data: null, error: null };
 
   if (!channelId) {
     payload.error = 'No channel ID provided.';
   } else {
-    const { data: video, error } = await getRandomVideo({
-      channelId,
-      maxPageTraversals: MAX_PAGE_TRAVERSALS,
-      key: API_KEY
-    });
-  
-    if (error) {
-      payload.error = 'Unable to retrieve random video. Check logs.';
-      console.error(error);
-    } else {
+    try {
+      const { data: videoId, error: searchError } = await getRandomVideo({
+        channelId,
+        maxPageTraversals: MAX_PAGE_TRAVERSALS,
+        key: API_KEY
+      });
+
+      if (searchError) throw searchError;
+
+      const { data: video, error: videoError } = await getVideoDetails({
+        id: videoId,
+        key: API_KEY
+      });
+
+      if (videoError) throw videoError;
+
       payload.data = video;
+    } catch (e) {
+      console.error(e);
+      payload.error = 'Unable to retrieve random video. Check logs.';
     }
   }
 
   return c.json(payload);
-
-// const { data: video, error } = await getRandomVideo('UCp5gkh86mxEpyvgLEQ6uvxg');
-
-// if (error) {
-//   console.error(error);
-//   Deno.exit(1);
-// }
 });
 
 Deno.serve({ port: SERVER_PORT }, app.fetch);
