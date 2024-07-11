@@ -1,8 +1,8 @@
 const KV = await Deno.openKv();
 const SEARCH_API_URL = 'https://www.googleapis.com/youtube/v3/search';
 const VIDEO_API_URL = 'https://www.googleapis.com/youtube/v3/videos';
-const SEVEN_DAYS = 7 * 8.64 * Math.pow(10, 7);
-const TWO_DAYS = 2 * 8.64 * Math.pow(10, 7);
+const PAGE_EXPIRY = 28 * 8.64 * Math.pow(10, 7);
+const VIDEO_EXPIRY = 14 * 8.64 * Math.pow(10, 7);
 
 const ORDERS = [
   'date',
@@ -140,10 +140,10 @@ export async function getRandomVideo(
     if (!isPagesCached) {
       // store page tokens for a week
       const uniquePageTokens = Array.from(new Set(pages));
-      KV.set(['pages', channelId], uniquePageTokens, { expireIn: SEVEN_DAYS });
+      KV.set(['pages', channelId], uniquePageTokens, { expireIn: PAGE_EXPIRY });
     }
 
-    await KV.set(['videos', channelId], videos, { expireIn: TWO_DAYS });
+    await KV.set(['videos', channelId], videos, { expireIn: VIDEO_EXPIRY });
     videoId = getRandom(videos);
   } catch (e) {
     error = e;
