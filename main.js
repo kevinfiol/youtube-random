@@ -6,10 +6,10 @@ import { getRandomVideo, getVideoDetails } from './youtube.js';
 
 loadSync({ export: true });
 
-const SERVER_PORT = Deno.env.get('SERVER_PORT');
-const API_KEY = Deno.env.get('GOOGLE_API_KEY');
-const USER = Deno.env.get('USER');
-const PASSWORD = Deno.env.get('PASSWORD');
+const SERVER_PORT = Number(Deno.env.get('SERVER_PORT')) ?? 80;
+const API_KEY = Deno.env.get('GOOGLE_API_KEY') ?? '';
+const USER = Deno.env.get('USER') ?? '';
+const PASSWORD = Deno.env.get('PASSWORD') ?? '';
 const MAX_PAGE_TRAVERSALS = Number(Deno.env.get('MAX_PAGE_TRAVERSALS')) ||
   Infinity;
 
