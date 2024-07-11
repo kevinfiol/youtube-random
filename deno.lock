@@ -1,0 +1,24 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@hono/hono@^4.4.12": "jsr:@hono/hono@4.4.12",
+      "jsr:@std/dotenv@^0.224.0": "jsr:@std/dotenv@0.224.0"
+    },
+    "jsr": {
+      "@hono/hono@4.4.12": {
+        "integrity": "75658e5402dc95df483a1961b8fb4ef73391a2c70109f97ad8e12d3b7b6f03c5"
+      },
+      "@std/dotenv@0.224.0": {
+        "integrity": "d9234cdf551507dcda60abb6c474289843741d8c07ee8ce540c60f5c1b220a1d"
+      }
+    }
+  },
+  "remote": {},
+  "workspace": {
+    "dependencies": [
+      "jsr:@hono/hono@^4.4.12",
+      "jsr:@std/dotenv@^0.224.0"
+    ]
+  }
+}
