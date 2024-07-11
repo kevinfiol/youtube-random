@@ -36,7 +36,7 @@ async function search(params = {}) {
     const query = new URLSearchParams({
       maxResults: 50,
       type: 'video',
-      ...params
+      ...params,
     }).toString();
 
     const res = await fetch(SEARCH_API_URL + '?' + query);
@@ -54,13 +54,19 @@ async function search(params = {}) {
 }
 
 export async function getVideoDetails(params = {}) {
-  const data = { id: '', channelId: '', channelTitle: '', title: '', imgUrl: '' };
+  const data = {
+    id: '',
+    channelId: '',
+    channelTitle: '',
+    title: '',
+    imgUrl: '',
+  };
   let error = undefined;
 
   try {
     const query = new URLSearchParams({
       part: 'snippet',
-      ...params
+      ...params,
     }).toString();
 
     const res = await fetch(VIDEO_API_URL + '?' + query);
@@ -81,7 +87,9 @@ export async function getVideoDetails(params = {}) {
   return { data, error };
 }
 
-export async function getRandomVideo({ channelId = '', key = '', maxPageTraversals = Infinity } = {}) {
+export async function getRandomVideo(
+  { channelId = '', key = '', maxPageTraversals = Infinity } = {},
+) {
   let videoId = undefined;
   let error = undefined;
 
