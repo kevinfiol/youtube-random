@@ -1,26 +1,11 @@
 const KV = await Deno.openKv();
-const SEARCH_API_URL = 'https://www.googleapis.com/youtube/v3/search';
-const VIDEO_API_URL = 'https://www.googleapis.com/youtube/v3/videos';
-const PAGE_EXPIRY = 28 * 8.64 * Math.pow(10, 7);
+const CHANNELS_API_URL = 'https://www.googleapis.com/youtube/v3/channels';
+const PLAYLIST_API_URL = 'https://www.googleapis.com/youtube/v3/playlistItems';
 const VIDEO_EXPIRY = 14 * 8.64 * Math.pow(10, 7);
-
-const ORDERS = [
-  'date',
-  'rating',
-  'relevance',
-  'title',
-  'videoCount',
-  'viewCount',
-];
 
 function getRandom(arr = []) {
   const idx = Math.floor(Math.random() * arr.length);
   return arr[idx];
-}
-
-async function getPages(channelId = '') {
-  const res = await KV.get(['pages', channelId]);
-  return res.value ?? [];
 }
 
 async function getVideos(channelId = '') {
@@ -28,58 +13,60 @@ async function getVideos(channelId = '') {
   return res.value ?? [];
 }
 
-async function search(params = {}) {
-  const data = { next: '', prev: '', items: [] };
+async function getPlaylistId({ id = '', key = '' }) {
+  let playlistId = '';
   let error = undefined;
 
   try {
     const query = new URLSearchParams({
-      maxResults: 50,
-      type: 'video',
-      ...params,
+      key,
+      id,
+      part: 'contentDetails',
     }).toString();
 
-    const res = await fetch(SEARCH_API_URL + '?' + query);
-    const json = await res.json();
-    if (json.error) throw Error(json.error.message);
+    const json = await fetch(CHANNELS_API_URL + '?' + query)
+      .then((r) => r.json());
 
-    data.items = json.items.map((i) => i.id.videoId);
-    data.next = json.nextPageToken ?? '';
-    data.prev = json.prevPageToken ?? '';
+    if (json.error) {
+      throw Error(json.error.message);
+    } else if (json.items && json.items.length < 1) {
+      throw Error('Playlist for channel uploads not found.');
+    }
+
+    playlistId = json.items[0].contentDetails.relatedPlaylists.uploads;
   } catch (e) {
     error = e;
   }
 
-  return { data, error };
+  return { data: playlistId, error };
 }
 
-export async function getVideoDetails(params = {}) {
-  const data = {
-    id: '',
-    channelId: '',
-    channelTitle: '',
-    title: '',
-    imgUrl: '',
-  };
+async function getPlaylistVideos({ key = '', playlistId = '', ...params }) {
+  const data = { nextPageToken: '', videos: [] };
   let error = undefined;
 
   try {
     const query = new URLSearchParams({
+      key,
+      playlistId,
       part: 'snippet',
+      maxResults: 50,
       ...params,
     }).toString();
 
-    const res = await fetch(VIDEO_API_URL + '?' + query);
-    const json = await res.json();
-    if (json.error) throw Error(json.error.message);
-    if (json.items && json.items.length === 0) throw Error('No video found.');
+    const json = await fetch(PLAYLIST_API_URL + '?' + query)
+      .then((r) => r.json());
 
-    const item = json.items[0];
-    data.id = item.id;
-    data.title = item.snippet.title;
-    data.channelId = item.snippet.channelId;
-    data.channelTitle = item.snippet.channelTitle;
-    data.imgUrl = item.snippet.thumbnails.high.url;
+    if (json.error) throw Error(json.error.message);
+    data.nextPageToken = json.nextPageToken || '';
+
+    data.videos = json.items.map((i) => ({
+      ...i.snippet,
+      id: i.snippet.resourceId.videoId,
+      channelId: i.snippet.videoOwnerChannelId,
+      thumbnail: i.snippet.thumbnails.high.url,
+      author: i.snippet.channelTitle,
+    }));
   } catch (e) {
     error = e;
   }
@@ -87,11 +74,10 @@ export async function getVideoDetails(params = {}) {
   return { data, error };
 }
 
-export async function getRandomVideo(
-  { channelId = '', key = '', maxPageTraversals = Infinity } = {},
-) {
-  let videoId = undefined;
+export async function getRandomVideo({ channelId = '', key = '' }) {
+  let video = undefined;
   let error = undefined;
+  let traversals = 0;
 
   try {
     if (!channelId || !channelId.trim()) {
@@ -99,55 +85,38 @@ export async function getRandomVideo(
     }
 
     let videos = await getVideos(channelId);
-    let traversals = 0;
-    let next = '';
+    let nextPageToken = '';
 
     if (videos.length > 0) {
-      // videos are cached; select one at random and return
       return { data: getRandom(videos), error };
     }
 
-    const order = getRandom(ORDERS);
-    const pages = await getPages(channelId);
-    const isPagesCached = pages.length > 0;
-
-    if (isPagesCached) {
-      // we already have the pageTokens; select a page at random
-      next = getRandom(pages);
-      traversals = maxPageTraversals;
-    }
+    const { data: playlistId } = await getPlaylistId({
+      id: channelId,
+      key,
+    });
 
     do {
-      const { data, error } = await search({
+      traversals += 1;
+      console.log({ traversals, nextPageToken });
+      const { data, error } = await getPlaylistVideos({
         key,
-        channelId,
-        order,
-        pageToken: next,
+        playlistId,
+        pageToken: nextPageToken
       });
 
       if (error) throw error;
 
-      if (!isPagesCached) {
-        if (data.next) pages.push(data.next);
-        if (data.prev) pages.push(data.prev);
-      }
+      nextPageToken = data.nextPageToken;
+      videos = [...videos, ...data.videos];
+    } while (nextPageToken);
 
-      next = data.next;
-      videos = [...videos, ...data.items];
-      traversals += 1;
-    } while (next && traversals < maxPageTraversals);
-
-    if (!isPagesCached) {
-      // store page tokens for a week
-      const uniquePageTokens = Array.from(new Set(pages));
-      KV.set(['pages', channelId], uniquePageTokens, { expireIn: PAGE_EXPIRY });
-    }
-
+    console.log('done with traversals ', traversals);
     await KV.set(['videos', channelId], videos, { expireIn: VIDEO_EXPIRY });
-    videoId = getRandom(videos);
+    video = getRandom(videos);
   } catch (e) {
     error = e;
   }
 
-  return { data: videoId, error };
+  return { data: video, error };
 }

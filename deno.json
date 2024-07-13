@@ -1,6 +1,7 @@
 {
   "tasks": {
-    "start": "deno run -A --unstable-kv main.js"
+    "start": "deno run -A --unstable-kv main.js",
+    "dev": "deno run -A --unstable-kv --watch main.js"
   },
   "imports": {
     "@hono/hono": "jsr:@hono/hono@^4.4.12",
