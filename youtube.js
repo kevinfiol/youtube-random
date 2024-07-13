@@ -1,7 +1,10 @@
+import lz from 'lz';
+
 const KV = await Deno.openKv();
 const CHANNELS_API_URL = 'https://www.googleapis.com/youtube/v3/channels';
 const PLAYLIST_API_URL = 'https://www.googleapis.com/youtube/v3/playlistItems';
-const VIDEO_EXPIRY = 14 * 8.64 * Math.pow(10, 7);
+const VIDEO_API_URL = 'https://www.googleapis.com/youtube/v3/videos';
+const VIDEO_EXPIRY = 20 * 8.64 * Math.pow(10, 7);
 
 function getRandom(arr = []) {
   const idx = Math.floor(Math.random() * arr.length);
@@ -10,7 +13,47 @@ function getRandom(arr = []) {
 
 async function getVideos(channelId = '') {
   const res = await KV.get(['videos', channelId]);
-  return res.value ?? [];
+  return res.value && res.value !== '[]'
+    ? JSON.parse(lz.decompress(res.value))
+    : [];
+}
+
+export async function getVideoDetails(params = {}) {
+  let data = {
+    id: '',
+    channelId: '',
+    channelTitle: '',
+    title: '',
+    thumbnail: '',
+  };
+
+  let error = undefined;
+
+  try {
+    const query = new URLSearchParams({
+      part: 'snippet',
+      ...params,
+    }).toString();
+
+    const res = await fetch(VIDEO_API_URL + '?' + query);
+    const json = await res.json();
+
+    if (json.error) throw Error(json.error.message);
+    if (json.items && json.items.length === 0) throw Error('No video found.');
+    const item = json.items[0];
+
+    data = {
+      id: item.id,
+      title: item.snippet.title,
+      channelId: item.snippet.channelId,
+      author: item.snippet.channelTitle,
+      thumbnail: item.snippet.thumbnails.high.url,
+    };
+  } catch (e) {
+    error = e;
+  }
+
+  return { data, error };
 }
 
 async function getPlaylistId({ id = '', key = '' }) {
@@ -42,7 +85,7 @@ async function getPlaylistId({ id = '', key = '' }) {
 }
 
 async function getPlaylistVideos({ key = '', playlistId = '', ...params }) {
-  const data = { nextPageToken: '', videos: [] };
+  const data = { nextPageToken: '', videoIds: [] };
   let error = undefined;
 
   try {
@@ -60,13 +103,7 @@ async function getPlaylistVideos({ key = '', playlistId = '', ...params }) {
     if (json.error) throw Error(json.error.message);
     data.nextPageToken = json.nextPageToken || '';
 
-    data.videos = json.items.map((i) => ({
-      ...i.snippet,
-      id: i.snippet.resourceId.videoId,
-      channelId: i.snippet.videoOwnerChannelId,
-      thumbnail: i.snippet.thumbnails.high.url,
-      author: i.snippet.channelTitle,
-    }));
+    data.videoIds = json.items.map((i) => i.snippet.resourceId.videoId);
   } catch (e) {
     error = e;
   }
@@ -75,20 +112,19 @@ async function getPlaylistVideos({ key = '', playlistId = '', ...params }) {
 }
 
 export async function getRandomVideo({ channelId = '', key = '' }) {
-  let video = undefined;
+  let videoId = undefined;
   let error = undefined;
-  let traversals = 0;
 
   try {
     if (!channelId || !channelId.trim()) {
       throw Error('Must provide channel ID');
     }
 
-    let videos = await getVideos(channelId);
+    let videoIds = await getVideos(channelId);
     let nextPageToken = '';
 
-    if (videos.length > 0) {
-      return { data: getRandom(videos), error };
+    if (videoIds.length > 0) {
+      return { data: getRandom(videoIds), error };
     }
 
     const { data: playlistId } = await getPlaylistId({
@@ -97,26 +133,24 @@ export async function getRandomVideo({ channelId = '', key = '' }) {
     });
 
     do {
-      traversals += 1;
-      console.log({ traversals, nextPageToken });
       const { data, error } = await getPlaylistVideos({
         key,
         playlistId,
-        pageToken: nextPageToken
+        pageToken: nextPageToken,
       });
 
       if (error) throw error;
 
       nextPageToken = data.nextPageToken;
-      videos = [...videos, ...data.videos];
+      videoIds = [...videoIds, ...data.videoIds];
     } while (nextPageToken);
 
-    console.log('done with traversals ', traversals);
-    await KV.set(['videos', channelId], videos, { expireIn: VIDEO_EXPIRY });
-    video = getRandom(videos);
+    videoId = getRandom(videoIds);
+    const compressed = lz.compress(JSON.stringify(videoIds));
+    await KV.set(['videos', channelId], compressed, { expireIn: VIDEO_EXPIRY });
   } catch (e) {
     error = e;
   }
 
-  return { data: video, error };
+  return { data: videoId, error };
 }

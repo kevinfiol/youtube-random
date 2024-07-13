@@ -5,7 +5,8 @@
   },
   "imports": {
     "@hono/hono": "jsr:@hono/hono@^4.4.12",
-    "@std/dotenv": "jsr:@std/dotenv@^0.224.0"
+    "@std/dotenv": "jsr:@std/dotenv@^0.224.0",
+    "lz": "https://esm.sh/v135/lz-string@1.5.0"
   },
   "lint": {
     "include": ["*.ts", "*.js"],

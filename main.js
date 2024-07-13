@@ -2,7 +2,7 @@ import { Hono } from '@hono/hono';
 import { secureHeaders } from '@hono/hono/secure-headers';
 import { basicAuth } from '@hono/hono/basic-auth';
 import { loadSync } from '@std/dotenv';
-import { getRandomVideo } from './youtube.js';
+import { getRandomVideo, getVideoDetails } from './youtube.js';
 
 loadSync({ export: true });
 
@@ -28,12 +28,19 @@ app.get(
       payload.error = 'No channel ID provided.';
     } else {
       try {
-        const { data: video, error } = await getRandomVideo({
+        const { data: videoId, error: searchError } = await getRandomVideo({
           channelId,
           key: API_KEY,
         });
 
-        if (error) throw error;
+        if (searchError) throw searchError;
+
+        const { data: video, error: videoError } = await getVideoDetails({
+          id: videoId,
+          key: API_KEY,
+        });
+
+        if (videoError) throw videoError;
         payload.data = video;
       } catch (e) {
         console.error(e);

@@ -14,7 +14,10 @@
       }
     }
   },
-  "remote": {},
+  "remote": {
+    "https://esm.sh/v135/lz-string@1.5.0": "a4322573bbbd2d044b5c0c30024bd440f2890ff55730675fa5f31987d42aec20",
+    "https://esm.sh/v135/lz-string@1.5.0/denonext/lz-string.mjs": "d7c5e1cdf048a845f4da9563ecc9fca66d2caddf625d6632512bc8a477ce75d7"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@^4.4.12",
