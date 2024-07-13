@@ -13,7 +13,7 @@ function getRandom(arr = []) {
 
 async function getVideos(channelId = '') {
   const res = await KV.get(['videos', channelId]);
-  return res.value && res.value !== '[]'
+  return res.value
     ? JSON.parse(lz.decompress(res.value))
     : [];
 }
