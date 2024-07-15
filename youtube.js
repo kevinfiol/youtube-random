@@ -4,7 +4,10 @@ const KV = await Deno.openKv();
 const CHANNELS_API_URL = 'https://www.googleapis.com/youtube/v3/channels';
 const PLAYLIST_API_URL = 'https://www.googleapis.com/youtube/v3/playlistItems';
 const VIDEO_API_URL = 'https://www.googleapis.com/youtube/v3/videos';
-const VIDEO_EXPIRY = 20 * 8.64 * Math.pow(10, 7);
+
+function daysToMs(days = 0) {
+  return days * 8.64 * Math.pow(10, 7);
+}
 
 function getRandom(arr = []) {
   const idx = Math.floor(Math.random() * arr.length);
@@ -13,9 +16,7 @@ function getRandom(arr = []) {
 
 async function getVideos(channelId = '') {
   const res = await KV.get(['videos', channelId]);
-  return res.value
-    ? JSON.parse(lz.decompress(res.value))
-    : [];
+  return res.value ? JSON.parse(lz.decompress(res.value)) : [];
 }
 
 export async function getVideoDetails(params = {}) {
@@ -111,7 +112,11 @@ async function getPlaylistVideos({ key = '', playlistId = '', ...params }) {
   return { data, error };
 }
 
-export async function getRandomVideo({ channelId = '', key = '' }) {
+export async function getRandomVideo({
+  channelId = '',
+  key = '',
+  cacheExpiryDays = 14,
+}) {
   let videoId = undefined;
   let error = undefined;
 
@@ -146,8 +151,12 @@ export async function getRandomVideo({ channelId = '', key = '' }) {
     } while (nextPageToken);
 
     videoId = getRandom(videoIds);
+
+    // compress and cache results
     const compressed = lz.compress(JSON.stringify(videoIds));
-    await KV.set(['videos', channelId], compressed, { expireIn: VIDEO_EXPIRY });
+    await KV.set(['videos', channelId], compressed, {
+      expireIn: daysToMs(cacheExpiryDays),
+    });
   } catch (e) {
     error = e;
   }
