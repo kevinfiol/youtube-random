@@ -1,0 +1,20 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+env:
+  PROJECT_NAME: yt-random
+  ORG_NAME: ${{ secrets.ORG_NAME }}
+  DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: deploy
+        run: |
+          deno deploy --prod --org $ORG_NAME --app $PROJECT_NAME

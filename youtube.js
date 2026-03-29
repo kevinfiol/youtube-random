@@ -1,4 +1,4 @@
-import lz from 'lz';
+import lz from 'lz-string';
 
 const KV = await Deno.openKv();
 const CHANNELS_API_URL = 'https://www.googleapis.com/youtube/v3/channels';
