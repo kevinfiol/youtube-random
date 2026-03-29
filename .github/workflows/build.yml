@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Description tag.'
 env:
   PROJECT_NAME: yt-random
   ORG_NAME: ${{ secrets.ORG_NAME }}
