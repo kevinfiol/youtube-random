@@ -1,6 +1,6 @@
 import { basicAuth, getQuery, H3, serve } from 'h3';
 import { loadSync } from '@std/dotenv';
-import { getRandomVideo, getVideoDetails, search } from './youtube.ts';
+import { getRandomVideo, getVideoDetails } from './youtube.ts';
 import type { Video } from './youtube.ts';
 
 interface Payload<T> {
@@ -20,6 +20,8 @@ const app = new H3();
 const auth = basicAuth({ username: USER, password: PASSWORD });
 
 // secure headers
+// mix of https://hono.dev/docs/middleware/builtin/secure-headers#supported-options
+// and of https://helmet.js.org/#http-header-reference
 app.use((ev) => {
   ev.res.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
   ev.res.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
@@ -39,20 +41,6 @@ app.use((ev) => {
 });
 
 app.get('/', () => 'OK');
-
-app.get('/search', async (ev) => {
-  const query = getQuery(ev);
-
-  try {
-    const { data: results, error } = await search(query?.searchQuery);
-    if (error) throw error;
-    return { data: results, error: null };
-  } catch (e) {
-    ev.res.status = 500;
-    console.error(e);
-    return { data: null, error: (e as Error).message };
-  }
-}, { middleware: [auth] });
 
 app.get('/random', async (ev) => {
   const query = getQuery(ev);

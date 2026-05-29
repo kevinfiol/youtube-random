@@ -3,8 +3,7 @@
   "specifiers": {
     "jsr:@std/dotenv@~0.225.6": "0.225.6",
     "npm:h3@^2.0.1-rc.22": "2.0.1-rc.22",
-    "npm:lz-string@^1.5.0": "1.5.0",
-    "npm:youtubei.js@^17.0.1": "17.0.1"
+    "npm:lz-string@^1.5.0": "1.5.0"
   },
   "jsr": {
     "@std/dotenv@0.225.6": {
@@ -12,9 +11,6 @@
     }
   },
   "npm": {
-    "@bufbuild/protobuf@2.12.0": {
-      "integrity": "sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA=="
-    },
     "h3@2.0.1-rc.22": {
       "integrity": "sha512-Esv0DMIuPkCTSWCA0vO73vcTqwzH1wjSrAO1TXNu/K3up1sZHa9EKMapbmxCDYBeymC3fVTk4qxp7ogQWQ+KgA==",
       "dependencies": [
@@ -27,22 +23,12 @@
       "integrity": "sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==",
       "bin": true
     },
-    "meriyah@6.1.4": {
-      "integrity": "sha512-Sz8FzjzI0kN13GK/6MVEsVzMZEPvOhnmmI1lU5+/1cGOiK3QUahntrNNtdVeihrO7t9JpoH75iMNXg6R6uWflQ=="
-    },
     "rou3@0.8.1": {
       "integrity": "sha512-ePa+XGk00/3HuCqrEnK3LxJW7I0SdNg6EFzKUJG73hMAdDcOUC/i/aSz7LSDwLrGr33kal/rqOGydzwl6U7zBA=="
     },
     "srvx@0.11.16": {
       "integrity": "sha512-bp07zRuycfTY43IjAvvTFnmnJi8ikW0VFiHwOhhYcVW/L4xQ1XY4PAd4Nuum1rsA17C39zL7x+CDhrn5AL32Rw==",
       "bin": true
-    },
-    "youtubei.js@17.0.1": {
-      "integrity": "sha512-1lO4b8UqMDzE0oh2qEGzbBOd4UYRdxn/4PdpRM7BGTHxM6ddsEsKZTu90jp8V9FHVgC2h1UirQyqoqLiKwl+Zg==",
-      "dependencies": [
-        "@bufbuild/protobuf",
-        "meriyah"
-      ]
     }
   },
   "remote": {
@@ -53,8 +39,7 @@
     "dependencies": [
       "jsr:@std/dotenv@~0.225.6",
       "npm:h3@^2.0.1-rc.22",
-      "npm:lz-string@^1.5.0",
-      "npm:youtubei.js@^17.0.1"
+      "npm:lz-string@^1.5.0"
     ]
   }
 }

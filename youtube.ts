@@ -1,5 +1,4 @@
 import lz from 'lz-string';
-import { Innertube, YTNodes } from 'youtubei.js';
 
 export interface Video {
   id: string;
@@ -188,59 +187,4 @@ export async function getRandomVideo({
   }
 
   return { data: videoId, error };
-}
-
-export async function search(query = '', pages = 3) {
-  try {
-    const innertube = await Innertube.create();
-    const searchResponse = await innertube.search(query, {
-      prioritize: 'relevance',
-      upload_date: 'all',
-    });
-
-    let tmp = [...searchResponse.results];
-    for (let i = 1; i < pages; i++) {
-      const nextSearchResponse = await searchResponse.getContinuation();
-      tmp = [...tmp, ...nextSearchResponse.results];
-    }
-
-    // filter out everything except videos and playlists
-    tmp = tmp.filter((r) => r.is(YTNodes.Video) || r.is(YTNodes.LockupView));
-
-    const results: (VideoSearchResult | PlaylistSearchResult)[] = [];
-    for (const r of tmp) {
-      if (r.is(YTNodes.LockupView)) {
-        const playlist: PlaylistSearchResult = {
-          type: 'playlist',
-          id: r.content_id,
-          title: r.metadata?.title.text,
-          thumbnail: r.content_image?.as(YTNodes.CollectionThumbnailView)
-            .primary_thumbnail?.image.at(1)?.url,
-        };
-
-        results.push(playlist);
-      } else if (r.is(YTNodes.Video)) {
-        const video: VideoSearchResult = {
-          type: 'video',
-          id: r.video_id,
-          channelId: r.author.id,
-          author: r.author.name,
-          title: r.title.text ?? r.video_id,
-          thumbnail: r.thumbnails.at(0)!.url,
-          published: r.published?.text ?? '',
-          length: r.length_text?.text ?? '',
-          views: r.short_view_count?.text ?? '',
-        };
-
-        results.push(video);
-      } else {
-        console.log('neither');
-      }
-    }
-
-    return { data: results };
-    // return { data: [] };
-  } catch (e) {
-    return { error: e as Error };
-  }
 }

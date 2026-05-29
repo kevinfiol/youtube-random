@@ -7,8 +7,7 @@
   "imports": {
     "@std/dotenv": "jsr:@std/dotenv@^0.225.6",
     "h3": "npm:h3@^2.0.1-rc.22",
-    "lz-string": "npm:lz-string@^1.5.0",
-    "youtubei.js": "npm:youtubei.js@^17.0.1"
+    "lz-string": "npm:lz-string@^1.5.0"
   },
   "lint": {
     "include": ["*.ts", "*.js"],
