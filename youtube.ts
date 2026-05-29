@@ -8,25 +8,6 @@ export interface Video {
   thumbnail: string;
 }
 
-export interface VideoSearchResult {
-  type: 'video';
-  id: string;
-  channelId: string;
-  author: string;
-  title: string;
-  thumbnail: string;
-  published: string;
-  length: string;
-  views: string;
-}
-
-export interface PlaylistSearchResult {
-  type: 'playlist';
-  id: string;
-  thumbnail?: string;
-  title?: string;
-}
-
 const KV = await Deno.openKv();
 const CHANNELS_API_URL = 'https://www.googleapis.com/youtube/v3/channels';
 const PLAYLIST_API_URL = 'https://www.googleapis.com/youtube/v3/playlistItems';
