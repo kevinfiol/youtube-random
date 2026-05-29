@@ -1,12 +1,14 @@
 {
   "tasks": {
-    "start": "deno run -A --unstable-kv main.js",
-    "dev": "deno run -A --unstable-kv --watch main.js"
+    "start": "deno run -A --unstable-kv main.ts",
+    "dev": "deno run -A --unstable-kv --watch main.ts",
+    "check": "deno check main.ts"
   },
   "imports": {
-    "@hono/hono": "jsr:@hono/hono@^4.12.9",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.6",
-    "lz-string": "npm:lz-string@^1.5.0"
+    "h3": "npm:h3@^2.0.1-rc.22",
+    "lz-string": "npm:lz-string@^1.5.0",
+    "youtubei.js": "npm:youtubei.js@^17.0.1"
   },
   "lint": {
     "include": ["*.ts", "*.js"],
