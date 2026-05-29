@@ -10,11 +10,11 @@ interface Payload<T> {
 
 loadSync({ export: true });
 
-const SERVER_PORT = Number(Deno.env.get('SERVER_PORT')) ?? 80;
+const SERVER_PORT = Number(Deno.env.get('SERVER_PORT') ?? 80);
 const API_KEY = Deno.env.get('GOOGLE_API_KEY') ?? '';
 const USER = Deno.env.get('USER') ?? '';
 const PASSWORD = Deno.env.get('PASSWORD') ?? '';
-const CACHE_EXPIRY_DAYS = Number(Deno.env.get('CACHE_EXPIRY_DAYS')) ?? 14;
+const CACHE_EXPIRY_DAYS = Number(Deno.env.get('CACHE_EXPIRY_DAYS') ?? 14);
 
 const app = new H3();
 const auth = basicAuth({ username: USER, password: PASSWORD });
